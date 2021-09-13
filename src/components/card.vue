@@ -1,57 +1,67 @@
 <template>
-  <v-card
-    class="mx-2"
-  >
-    <v-img
-      src="https://cdn.vuetifyjs.com/images/cards/sunshine.jpg"
-      height="200px"
-    ></v-img>
+  <v-card class="mx-2 my-2">
+    <v-img :src="item.att" height="200px" @click="show = !show"></v-img>
 
     <v-card-title>
-      Top western road trips
-    </v-card-title>
-
-    <v-card-subtitle>
-      1,000 miles of wonder
-    </v-card-subtitle>
-
-    <v-card-actions>
-      <v-btn text>Share</v-btn>
-
-      <v-btn
-        color="purple"
-        text
-      >
-        Explore
-      </v-btn>
-
+      {{item.SHOP_NAME}}
       <v-spacer></v-spacer>
-
-      <v-btn
-        icon
-        @click="show = !show"
-      >
+      <v-btn icon @click="show = !show">
         <v-icon>{{ show ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
       </v-btn>
-    </v-card-actions>
+    </v-card-title>
 
     <v-expand-transition>
       <div v-show="show">
         <v-divider></v-divider>
 
-        <v-card-text>
-          I'm a thing. But, like most politicians, he promised more than he could deliver. You won't have time for sleeping, soldier, not with all the bed making you'll be doing. Then we'll go with that data file! Hey, you add a one and two zeros to that or we walk! You're going to do his laundry? I've got to find a way to escape.
-        </v-card-text>
+        <v-subheader>
+          <font style="width:100px">环境</font>
+          <v-rating v-model="item.ENVIRONMENT_SCORE" :length="5" :half-increments="false" color="yellow accent-4" readonly></v-rating>
+        </v-subheader>
+        <v-subheader>
+          <font style="width:100px">其他</font>
+          <v-rating v-model="item.OTHER_SCORE" :length="5" :half-increments="false" color="yellow accent-4" readonly></v-rating>
+        </v-subheader>
+        <v-subheader v-for="(im, i) in item.DETAILS" :key="i">
+          <font style="width:100px">{{im.project}}</font>
+          <v-rating v-model="im.stars" :length="5" :half-increments="true" color="yellow accent-4"></v-rating>
+        </v-subheader>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="del(item.ID)">删除</v-btn>
+        </v-card-actions>
       </div>
     </v-expand-transition>
   </v-card>
 </template>
 
 <script>
-  export default {
-    data: () => ({
-      show: false,
-    }),
-  }
+import axios from "axios";
+export default {
+  props: {
+    item: Object,
+  },
+  data: () => ({
+    show: false,
+  }),
+  methods: {
+    del(id) {
+      let url = this.$base + "/api/NicheComments/Delete?ID=" + id;
+      axios.get(url).then((res) => {
+        if (!res.data.success) {
+         alert(res.message.content);
+         this.$emit('refresh')
+        }
+        else{
+          alert('删除成功！')
+          this.$emit('refresh')
+        }
+      });
+    },
+  },
+  mounted() {
+    console.log(this.item);
+  },
+};
 </script>
 

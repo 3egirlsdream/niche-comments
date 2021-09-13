@@ -157,7 +157,7 @@ export default {
         DETAILS:this.taste
       };
       console.log(JSON.stringify(data));
-      let url = "http://47.107.186.141:4396/api/NicheComments/Submit"
+      let url = this.$base + "/api/NicheComments/Submit"
       axios.post(url, data, {
             headers: {
                 "Content-Type": "application/json"
@@ -172,6 +172,7 @@ export default {
                 console.log(error);
             });
       this.$emit("submit");
+      this.$emit('refresh')
     },
     uploadIMG(e) {
       console.log(e);
