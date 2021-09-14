@@ -66,7 +66,7 @@
 import axios from "axios";
 export default {
   data: () => ({
-    alert:false,
+    alert: false,
     shopName: null,
     showAddItem: false,
     rating: 1,
@@ -94,7 +94,7 @@ export default {
       total: 5,
       half: true,
       score: "0",
-      atts:[]
+      atts: [],
     },
     score: "0",
     slides: ["First", "Second", "Third", "Fourth", "Fifth"],
@@ -108,7 +108,7 @@ export default {
     ],
     token: "",
     filelist: [],
-    message:''
+    message: "",
   }),
   watch: {
     base: {
@@ -151,28 +151,30 @@ export default {
     submitComment() {
       let self = this;
       let data = {
-        SHOP_NAME:this.shopName,
-        ENVIRONMENT_SCORE : this.base[0].stars,
-        OTHER_SCORE:this.base[1].stars,
-        DETAILS:this.taste
+        SHOP_NAME: this.shopName,
+        ENVIRONMENT_SCORE: this.base[0].stars,
+        OTHER_SCORE: this.base[1].stars,
+        DETAILS: this.taste,
       };
       console.log(JSON.stringify(data));
-      let url = this.$base + "/api/NicheComments/Submit"
-      axios.post(url, data, {
-            headers: {
-                "Content-Type": "application/json"
-            }
+      let url = this.$base + "/api/NicheComments/Submit";
+      axios
+        .post(url, data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
         })
-            .then(function (response) {
-                if (response != null && response.data.success) {
-                    self.message = "保存成功";
-                }
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        .then(function (response) {
+          if (response != null && response.data.success) {
+            self.$emit('toast',  "保存成功");
+            self.$emit("refresh");
+          }
+        })
+        .catch(function (error) {
+          this.$emit('toast', error);
+          this.$emit("refresh");
+        });
       this.$emit("submit");
-      this.$emit('refresh')
     },
     uploadIMG(e) {
       console.log(e);
@@ -203,6 +205,9 @@ export default {
           };
           self.newItem.atts.push(_);
           //self.percent = parseInt(self.filelist.length / self.total * 100)
+          self.$emit('toast', "上传成功");
+        } else {
+          self.$emit('toast', response.data.message.content);
         }
       });
     },
