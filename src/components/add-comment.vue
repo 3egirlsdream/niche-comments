@@ -1,5 +1,13 @@
 <template>
   <div class="text-center">
+    <v-dialog v-model="uploading" hide-overlay persistent width="300">
+      <v-card color="primary" dark>
+        <v-card-text>
+          上传中
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-card class=" px-2 py-2">
       <v-form ref="form" v-model="valid" :lazy-validation="lazy">
 
@@ -50,7 +58,7 @@
           <v-text-field v-model="newItem.project" :rules="nameRules" label="菜名" required class="mx-2"></v-text-field>
           <v-rating v-model="newItem.stars" :length="newItem.total" :half-increments="true" color="yellow accent-4"></v-rating>
           <v-file-input chips multiple label="File input w/ chips" style="overflow-x:hidden" @change="uploadIMG"></v-file-input>
-          <v-btn color="warning" @click="addNewItem" :disabled="!newItem.project" :loading="uploading">
+          <v-btn color="warning" @click="addNewItem" :disabled="!newItem.project">
             添加
           </v-btn>
         </v-form>
@@ -65,8 +73,8 @@
 <script>
 import axios from "axios";
 export default {
-  props:{
-    obj:Object
+  props: {
+    obj: Object,
   },
   data: () => ({
     uploading: false,
@@ -154,14 +162,12 @@ export default {
     },
     addItem() {},
     submitComment() {
-      let self = this;
       let data = {
         SHOP_NAME: this.shopName,
         ENVIRONMENT_SCORE: this.base[0].stars,
         OTHER_SCORE: this.base[1].stars,
         DETAILS: this.taste,
       };
-      console.log(JSON.stringify(data));
       let url = this.$base + "/api/NicheComments/Submit";
       axios
         .post(url, data, {
@@ -169,20 +175,22 @@ export default {
             "Content-Type": "application/json",
           },
         })
-        .then(function (response) {
-          if (response != null && response.data.success) {
-            self.$emit('toast',  "保存成功");
-            self.$emit("refresh");
+        .then((res) => {
+          if (!res.data.success) {
+            this.$emit("toast", res.data.message.content);
+            this.$emit("refresh");
+          } else {
+            this.$emit("toast", "保存成功！");
+            this.$emit("refresh");
           }
         })
-        .catch(function (error) {
-          this.$emit('toast', error);
+        .catch((error) => {
+          this.$emit("toast", error);
           this.$emit("refresh");
         });
-      this.$emit("submit");
     },
     uploadIMG(e) {
-      if(e.length == 0) return;
+      if (e.length == 0) return;
       this.uploading = true;
       this.newItem.atts = [];
       for (let i = 0; i < e.length; i++) {
@@ -201,26 +209,28 @@ export default {
         method: "post",
         url: "http://up-z2.qiniup.com",
         data: formData,
-      }).then(function (response) {
-        if (response != null && response.data != null) {
-          let _ = {
-            MUSIC_NAME: file.name,
-            ARTISTS: file.name,
-            CDN: response.data.key,
-            QUALITY: "SQ",
-          };
-          self.newItem.atts.push(_);
-          //self.percent = parseInt(self.filelist.length / self.total * 100)
-          self.$emit('toast', "上传成功");
+      })
+        .then(function (response) {
+          if (response != null && response.data != null) {
+            let _ = {
+              MUSIC_NAME: file.name,
+              ARTISTS: file.name,
+              CDN: response.data.key,
+              QUALITY: "SQ",
+            };
+            self.newItem.atts.push(_);
+            //self.percent = parseInt(self.filelist.length / self.total * 100)
+            self.$emit("toast", "上传成功");
+            self.uploading = false;
+          } else {
+            self.$emit("toast", response.data.message.content);
+            self.uploading = false;
+          }
+        })
+        .catch((err) => {
+          self.$emit("toast", err);
           self.uploading = false;
-        } else {
-          self.$emit('toast', response.data.message.content);
-          self.uploading = false;
-        }
-      }).catch((err)=>{
-        self.$emit('toast', err);
-        self.uploading = false;
-      });
+        });
     },
     getToken() {
       let self = this;
@@ -236,14 +246,14 @@ export default {
   },
   mounted() {
     this.getToken();
-    if(this.obj != null){
+    if (this.obj != null) {
       this.base[0].stars = this.obj.ENVIRONMENT_SCORE;
       this.base[0].stars = this.obj.OTHER_SCORE;
       this.shopName = this.obj.SHOP_NAME;
       this.taste = [];
-      for(let i = 0; i < this.obj.DETAILS.length;i++){
+      for (let i = 0; i < this.obj.DETAILS.length; i++) {
         let e = this.obj.DETAILS[i];
-        this.taste.push({project:e.project, starts:e.stars});
+        this.taste.push({ project: e.project, starts: e.stars });
       }
     }
   },

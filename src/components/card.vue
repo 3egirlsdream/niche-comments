@@ -38,8 +38,18 @@
         <v-card-actions>
           <v-btn @click="add(item)" color="primary">新增</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="del(item.ID)" color="error">删除</v-btn>
+          <v-btn @click="deleted = true" color="error">删除</v-btn>
         </v-card-actions>
+        <v-dialog v-model="deleted" persistent max-width="290">
+          <v-card>
+            <v-card-title><v-icon>mdi-delete</v-icon>删除确认?</v-card-title>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="green darken-1" text @click="deleted = false">取消</v-btn>
+              <v-btn color="green darken-1" text @click="deleted = false, del(item.ID)">确定</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </div>
     </v-expand-transition>
   </v-card>
@@ -52,6 +62,7 @@ export default {
     item: Object,
   },
   data: () => ({
+    deleted:false,
     show: false,
   }),
   methods: {
@@ -62,7 +73,7 @@ export default {
       let url = this.$base + "/api/NicheComments/Delete?ID=" + id;
       axios.get(url).then((res) => {
         if (!res.data.success) {
-         this.$emit('toast', res.message.content);
+         this.$emit('toast', res.data.message.content);
          this.$emit('refresh')
         }
         else{
