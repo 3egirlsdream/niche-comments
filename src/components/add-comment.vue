@@ -21,7 +21,7 @@
             </v-expansion-panel-header>
             <v-expansion-panel-content>
               <v-rating v-model="item.stars" :length="item.total" :half-increments="item.half" color="yellow accent-4"></v-rating>
-              <v-carousel :continuous="false" :cycle="cycle" :show-arrows="false" hide-delimiter-background delimiter-icon="mdi-minus" height="300">
+              <!-- <v-carousel :continuous="false" :cycle="cycle" :show-arrows="false" hide-delimiter-background delimiter-icon="mdi-minus" height="300">
                 <v-carousel-item v-for="(slide, i) in slides" :key="i">
                   <v-sheet :color="colors[i]" height="100%" tile>
                     <v-row class="fill-height" align="center" justify="center">
@@ -29,7 +29,7 @@
                     </v-row>
                   </v-sheet>
                 </v-carousel-item>
-              </v-carousel>
+              </v-carousel> -->
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -50,7 +50,7 @@
           <v-text-field v-model="newItem.project" :rules="nameRules" label="菜名" required class="mx-2"></v-text-field>
           <v-rating v-model="newItem.stars" :length="newItem.total" :half-increments="true" color="yellow accent-4"></v-rating>
           <v-file-input chips multiple label="File input w/ chips" style="overflow-x:hidden" @change="uploadIMG"></v-file-input>
-          <v-btn color="warning" @click="addNewItem" :disabled="!newItem.project">
+          <v-btn color="warning" @click="addNewItem" :disabled="!newItem.project" :loading="uploading">
             添加
           </v-btn>
         </v-form>
@@ -65,7 +65,11 @@
 <script>
 import axios from "axios";
 export default {
+  props:{
+    obj:Object
+  },
   data: () => ({
+    uploading: false,
     alert: false,
     shopName: null,
     showAddItem: false,
@@ -135,6 +139,7 @@ export default {
       let _ = JSON.parse(JSON.stringify(this.newItem));
       this.taste.push(_);
       this.showAddItem = false;
+      this.newItem = {};
     },
     computeResult() {
       let bs = (this.base[1].stars * 0.1) / 5 + (this.base[0].stars * 0.1) / 5;
@@ -177,7 +182,8 @@ export default {
       this.$emit("submit");
     },
     uploadIMG(e) {
-      console.log(e);
+      if(e.length == 0) return;
+      this.uploading = true;
       this.newItem.atts = [];
       for (let i = 0; i < e.length; i++) {
         this.upload(e[i]);
@@ -206,9 +212,14 @@ export default {
           self.newItem.atts.push(_);
           //self.percent = parseInt(self.filelist.length / self.total * 100)
           self.$emit('toast', "上传成功");
+          self.uploading = false;
         } else {
           self.$emit('toast', response.data.message.content);
+          self.uploading = false;
         }
+      }).catch((err)=>{
+        self.$emit('toast', err);
+        self.uploading = false;
       });
     },
     getToken() {
@@ -225,6 +236,16 @@ export default {
   },
   mounted() {
     this.getToken();
+    if(this.obj != null){
+      this.base[0].stars = this.obj.ENVIRONMENT_SCORE;
+      this.base[0].stars = this.obj.OTHER_SCORE;
+      this.shopName = this.obj.SHOP_NAME;
+      this.taste = [];
+      for(let i = 0; i < this.obj.DETAILS.length;i++){
+        let e = this.obj.DETAILS[i];
+        this.taste.push({project:e.project, starts:e.stars});
+      }
+    }
   },
 };
 </script>

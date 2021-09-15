@@ -19,14 +19,14 @@
     </v-app-bar>
 
     <v-main class="mt-2 mb-15" style="text-align:center;">
-      <card v-for="(item, i) in list" :key="i" :item="item" @refresh="init" @toast="toast"/>
+      <card v-for="(item, i) in list" :key="i" :item="item" @refresh="init" @toast="toast" @add="addItem"/>
       <v-dialog v-model="showAdd" width="100vw" height="90vh">
-        <add-comments @submit="showAdd = false" @refresh="init" @toast="toast"/>
+        <add-comments v-if="showAdd" @submit="showAdd = false" @refresh="init" @toast="toast" :obj="obj"/>
       </v-dialog>
     </v-main>
     <section class="footer" style="position: fixed; bottom: 0px; width: 100%;text-align: center;overflow: hidden;">
       <v-bottom-navigation color="indigo">
-        <v-btn @click="showAdd = true">
+        <v-btn @click="obj = null, showAdd = true">
           <span>新增评价</span>
           <v-icon dark>mdi-plus</v-icon>
         </v-btn>
@@ -48,6 +48,7 @@ export default {
   },
 
   data: () => ({
+    obj:null,
     snackbar:false,
     text:'',
     showAdd: false,
@@ -55,6 +56,10 @@ export default {
   }),
 
   methods: {
+    addItem(e){
+      this.obj = e;
+      this.showAdd = true;
+    },
     init() {
       let url = this.$base + "/api/NicheComments/GetList";
       axios.get(url).then((res) => {
